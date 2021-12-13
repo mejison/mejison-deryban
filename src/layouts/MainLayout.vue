@@ -12,10 +12,9 @@
         />
 
         <q-toolbar-title>
-          Quasar App
+          {{ mainInfo.nameApp }}
         </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
       </q-toolbar>
     </q-header>
 
@@ -93,6 +92,10 @@ const linksList = [
   }
 ];
 
+const mainInfo = {
+  nameApp: 'Mejison Deryban'
+}
+
 import { defineComponent, ref } from 'vue'
 
 export default defineComponent({
@@ -107,6 +110,7 @@ export default defineComponent({
 
     return {
       essentialLinks: linksList,
+      mainInfo,
       leftDrawerOpen,
       toggleLeftDrawer () {
         leftDrawerOpen.value = !leftDrawerOpen.value

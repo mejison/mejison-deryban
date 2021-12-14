@@ -18,20 +18,57 @@
             </q-avatar>
           </q-item-section>
           <q-item-section>{{ member.name }}</q-item-section>
-          <q-link @click.prevent="onRemove(index)">
-            <q-icon name="remove"></q-icon>
-          </q-link>
+          <q-btn flat @click.prevent="onRemove(index)"  icon="delete" />
         </q-item>
       </q-list>
+      
+      <div class="q-ma-md">
+        <div class="text-center">
+          {{ $t('chunk_by') }}: {{ perChunk }}
+        </div>
 
-      <q-btn @click="deryban"  class="q-mt-md" :disabled=" ! canDeryban" color="primary" icon="published_with_changes" :label="$t('deryban')" />
+        <q-slider
+          v-model="perChunk"
+          :label-always="true"
+          :min="sliderOptions.min"
+          :max="sliderOptions.max"
+        />
+      </div>
+
+      <q-btn @click="deryban"  class="q-mt-md q-mb-md" :disabled=" ! canDeryban" color="primary" icon="published_with_changes" :label="$t('deryban')" />
+
+      <div v-if="teams.length">
+         <q-list padding bordered class="rounded-borders">
+            <q-expansion-item
+              v-for="(team, index) in teams" :key="index"
+              dense
+              dense-toggle
+              expand-separator
+              icon="supervisor_account"
+              :label="`Команда ${ index + 1}: ${team.name}`"
+              default-opened
+            >
+              <q-list  class="q-mt-md" v-if="team.members.length">
+                <q-item clickable v-ripple v-for="(member, index) in team.members" :key="index">
+                  <q-item-section avatar>
+                    <q-avatar>
+                      <img src="~/assets/boy-avatar.png">
+                    </q-avatar>
+                  </q-item-section>
+                  <q-item-section>{{ member.name }}</q-item-section>
+                </q-item>
+              </q-list>
+            </q-expansion-item>
+          </q-list>
+      </div>
   </q-page>
 </template>
 
 <script>
 import { defineComponent } from 'vue';
-import { ref } from 'vue'
 
+import animals from "../animals.json";
+import colors from '../colors.json';
 
 export default defineComponent({
   name: 'PageIndex',
@@ -47,13 +84,24 @@ export default defineComponent({
         }
       ],
       memberName: '',
+      perChunk: 2,
+      teams: [],
+      sliderOptions: {
+        min: 1,
+        max: 5,
+      },
+      lang: this.$i18n.locale
     }
   },
 
   computed: {
     canDeryban() {
-      return this.members.length && this.members.length % 2 == 0;
-    }
+      let evenMembers = this.members.length && this.members.length % 2 == 0;
+      let chunkLessMembers = this.perChunk < this.members.length;
+      let canSeparete = this.members.length % this.perChunk == 0;
+
+      return evenMembers && chunkLessMembers && canSeparete
+    },
   },
 
   methods: {
@@ -73,8 +121,36 @@ export default defineComponent({
       }
     },
     deryban() {
-      alert('1')
-    }
+      if (this.perChunk < this.members.length) {
+        this.teams = this.chunk(this.shuffle([...this.members]), this.perChunk)
+        this.teams = this.teams.map((members, index) => {
+          let randomColor = colors[this.lang][Math.floor(Math.random() * colors[this.lang].length)];
+          let randomAnimal = animals[this.lang][Math.floor(Math.random() * animals[this.lang].length)];
+          return {
+            name: `${randomColor} ${randomAnimal}`,
+            members,
+          };
+        });
+      }
+    },
+    shuffle(array) {
+      let currentIndex = array.length,  randomIndex;
+      while (currentIndex != 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [array[currentIndex], array[randomIndex]] = [
+          array[randomIndex], array[currentIndex]];
+      }
+
+      return array;
+    },
+    chunk(array, perChunk) {
+      return array.reduce((all, one, i) => {
+        const ch = Math.floor(i / perChunk); 
+        all[ch] = [].concat((all[ch]||[]),one); 
+        return all
+      }, [])
+    },
   }
 })
 </script>
